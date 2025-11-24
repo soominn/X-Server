@@ -2,13 +2,10 @@ import express from "express";
 import * as authRepository from "../data/auth.mjs";
 import * as bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-
-const secretKey = 'abcdefg1234!@#$';
-const bcryptSaltRounds = 10;
-const jwtExpiresInDays = "2d";
+import { config } from "../config.mjs";
 
 async function createJwtToken(id) {
-    return jwt.sign({ id }, secretKey, { expiresIn: jwtExpiresInDays }); // jwt 토큰 생성
+    return jwt.sign({ id }, config.jwt.secretKey, { expiresIn: config.jwt.expiresInSec }); // jwt 토큰 생성
 }
 
 // export async function signup(req, res, next) {
@@ -36,7 +33,7 @@ export async function signup(req, res, next) {
         return res.status(409).json({ message: `${userid}이 이미 있습니다.` });
     }
 
-    const hashed = bcrypt.hashSync(password, bcryptSaltRounds);
+    const hashed = bcrypt.hashSync(password, config.bcrypt.saltRounds);
     const user = await authRepository.createUser(userid, hashed, name, email);
     // const user = await authRepository.createUser(userid, password, name, email);
     const token = await createJwtToken(user.id);
