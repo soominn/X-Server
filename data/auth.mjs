@@ -1,38 +1,26 @@
-import MongoDB from "mongodb";
-import { getUsers } from "../db/database.mjs";
+import mongoose from "mongoose";
+import { useVirtualId } from "../db/database.mjs";
 
-const ObjectID = MongoDB.ObjectId;
+// versionKey: Mongoose가 문서를 저장할 때 자동으로 추가하는 _v라는 필드를 설정
+const userSchema = new mongoose.Schema({
+    userid: { type: String, require: true },
+    name: { type: String, require: true },
+    email: { type: String, require: true },
+    password: { type: String, require: true },
+    url: String
+}, { versionKey: false });
 
-// export async function signup(userid, password, name, email) {
-//     const user = {
-//         id: Date.now().toString(),
-//         userid: userid,
-//         password: password,
-//         name: name,
-//         email: email
-//     };
-
-//     users = [user, ...users];
-
-//     return user;
-// }
-
-// export async function login(userid, password) {
-//     return users.find((user) => user.userid === userid && user.password === password);
-// }
+useVirtualId(userSchema);
+const User = mongoose.model("User", userSchema); // 이렇게 작성하면 users라는 스키마(테이블)에 저장되게 됨
 
 export async function createUser(user) {
-    return getUsers().insertOne(user).then((result) => result.insertedId.toString());
+    return new User(user).save().then((data) => data.id);
 }
 
 export async function findByUserid(userid) {
-    return getUsers().find({ userid }).next().then(mapOptionalUser);
+    return User.findOne({ userid });
 }
 
 export async function findById(id) {
-    return getUsers().find({ _id: new ObjectID(id) }).next().then(mapOptionalUser);
-}
-
-function mapOptionalUser(user) {
-    return user ? { ...user, id: user._id.toString() } : user;
+    return User.findById(id);
 }
